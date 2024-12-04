@@ -67,8 +67,8 @@ exports.categoryPageDetails = async (req, res) => {
     // Handle the case when there are no courses
     if (selectedCategory.courses.length === 0) {
       console.log("No courses found for the selected category.")
-      return res.status(404).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: "No courses found for the selected category.",
       })
     }
