@@ -8,8 +8,7 @@ const { passwordUpdated } = require("../mail/templates/passwordUpdate")
 const Profile = require("../models/Profile")
 require("dotenv").config()
 
-// Signup Controller for Registering USers
-
+// Signup Controller for Registering Users
 exports.signup = async (req, res) => {
   try {
     // Destructure fields from the request body
@@ -120,19 +119,15 @@ exports.login = async (req, res) => {
 
     // Check if email or password is missing
     if (!email || !password) {
-      // Return 400 Bad Request status code with error message
       return res.status(400).json({
         success: false,
         message: `Please Fill up All the Required Fields`,
       })
     }
 
-    // Find user with provided email
     const user = await User.findOne({ email }).populate("additionalDetails")
 
-    // If user not found with provided email
     if (!user) {
-      // Return 401 Unauthorized status code with error message
       return res.status(401).json({
         success: false,
         message: `User is not Registered with Us Please SignUp to Continue`,

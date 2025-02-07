@@ -16,7 +16,7 @@ exports.capturePayment = async (req, res) => {
   const { courses } = req.body
   const userId = req.user.id
 
-  console.log(courses);
+  console.log("courses: ",courses);
 
   if (!Array.isArray(courses) || courses.length === 0) {
     return res.json({ success: false, message: "Please Provide Course ID" })
@@ -39,7 +39,7 @@ exports.capturePayment = async (req, res) => {
 
       // Check if the user is already enrolled in the course
       const uid = new mongoose.Types.ObjectId(userId)
-      console.log(uid);
+      console.log("uid: ",uid);
       if (course.studentsEnrolled.includes(uid)) {
         return res
           .status(200)
@@ -63,7 +63,7 @@ exports.capturePayment = async (req, res) => {
   try {
     // Initiate the payment using Razorpay
     const paymentResponse = await instance.orders.create(options)
-    console.log(paymentResponse)
+    console.log("Payment Response: ",paymentResponse)
     res.json({
       success: true,
       data: paymentResponse,
@@ -78,36 +78,40 @@ exports.capturePayment = async (req, res) => {
 
 // verify the payment
 exports.verifyPayment = async (req, res) => {
-  const razorpay_order_id = req.body?.razorpay_order_id
-  const razorpay_payment_id = req.body?.razorpay_payment_id
-  const razorpay_signature = req.body?.razorpay_signature
-  const courses = req.body?.courses
+  try {
+    
+    const razorpay_order_id = req.body?.razorpay_order_id
+    const razorpay_payment_id = req.body?.razorpay_payment_id
+    const razorpay_signature = req.body?.razorpay_signature
+    const courses = req.body?.courses
 
-  const userId = req.user.id
+    const userId = req.user.id
 
-  if (
-    !razorpay_order_id ||
-    !razorpay_payment_id ||
-    !razorpay_signature ||
-    !courses ||
-    !userId
-  ) {
-    return res.status(200).json({ success: false, message: "Payment Failed" })
+    if (
+      !razorpay_order_id ||
+      !razorpay_payment_id ||
+      !razorpay_signature ||
+      !courses ||
+      !userId
+    ) {
+      return res.status(200).json({ success: false, message: "Payment Failed" })
+    }
+
+    let body = razorpay_order_id + "|" + razorpay_payment_id
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_SECRET)
+      .update(body.toString())
+      .digest("hex")
+
+    if (expectedSignature === razorpay_signature) {
+      await enrollStudents(courses, userId, res)
+      return res.status(200).json({ success: true, message: "Payment Verified" })
+    }
+  } catch (error) {
+    return res.status(200).json({ success: false, message: error.message })
   }
 
-  let body = razorpay_order_id + "|" + razorpay_payment_id
-
-  const expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_SECRET)
-    .update(body.toString())
-    .digest("hex")
-
-  if (expectedSignature === razorpay_signature) {
-    await enrollStudents(courses, userId, res)
-    return res.status(200).json({ success: true, message: "Payment Verified" })
-  }
-
-  return res.status(200).json({ success: false, message: "Payment Failed" })
 }
 
 // Send Payment Success Email

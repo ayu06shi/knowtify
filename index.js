@@ -6,6 +6,7 @@ const profileRoutes = require("./routes/profile");
 const courseRoutes = require("./routes/Course");
 const paymentRoutes = require("./routes/Payments");
 const contactUsRoute = require("./routes/Contact");
+const cartRoute = require("./routes/Cart");
 const database = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -49,6 +50,7 @@ app.use("/profile", profileRoutes);
 app.use("/course", courseRoutes);
 app.use("/payment", paymentRoutes);
 app.use("/reach", contactUsRoute);
+app.use("/cart", cartRoute);
 
 // Testing the server
 app.get("/", (req, res) => {
