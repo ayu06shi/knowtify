@@ -7,20 +7,30 @@ const courseRoutes = require("./routes/Course");
 const paymentRoutes = require("./routes/Payments");
 const contactUsRoute = require("./routes/Contact");
 const cartRoute = require("./routes/Cart");
+const noteRoutes = require("./routes/Notes")
 const database = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const { cloudinaryConnect } = require("./config/cloudinary");
 const fileUpload = require("express-fileupload");
 const dotenv = require("dotenv");
+const http = require("http")
+const { Server } = require("socket.io");
+const setupSocket = require("./socket/socketManager");
+
+const server = http.createServer(app);
+const io = new Server(server, {
+	cors: {
+		origin: "http://localhost:4000",
+		methods: [ "GET", "POST "]
+	},
+});
 
 // Loading environment variables from .env file
 dotenv.config();
 
 // Setting up port number
 const PORT = process.env.PORT || 4000;
-
-
 
 // Connecting to database
 database.connect();
@@ -51,6 +61,7 @@ app.use("/course", courseRoutes);
 app.use("/payment", paymentRoutes);
 app.use("/reach", contactUsRoute);
 app.use("/cart", cartRoute);
+app.use("/notes", noteRoutes)
 
 // Testing the server
 app.get("/", (req, res) => {
@@ -59,6 +70,9 @@ app.get("/", (req, res) => {
 		message: "Your server is up and running ...",
 	});
 });
+
+// Setting Socket.io
+setupSocket(io);
 
 // Listening to the server
 app.listen(PORT, () => {

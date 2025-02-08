@@ -53,6 +53,12 @@ const coursesSchema = new mongoose.Schema({
     type: String,
     enum: ["Draft", "Published"],
   },
+  notes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Notes",
+    },
+  ],
   createdAt: { type: Date, default: Date.now },
 })
 
