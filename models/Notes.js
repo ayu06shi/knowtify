@@ -5,6 +5,17 @@ const notesSchema = new mongoose.Schema({
   course: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Course",
+    required: true,
+  },
+  section: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Section",
+    required: true, // Ensure the note belongs to a section
+  },
+  subSection: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "SubSection",
+    required: true, // Ensure the note belongs to a specific video
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

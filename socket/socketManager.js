@@ -5,7 +5,8 @@ const setupSocket = (io) => {
         console.log(`User connected: ${socket.id}`);
 
         // join a note room
-        socket.on("join_note", (noteId) => {
+        socket.on("receive_note", (noteId) => {
+            console.log("Connected to server:", socket.id);
             socket.join(noteId);
             if(notes[noteId]) {
                 socket.emit("load_note", notes[noteId]); //send 
