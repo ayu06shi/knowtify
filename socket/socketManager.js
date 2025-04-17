@@ -1,30 +1,42 @@
-const notes = {}; // store notes in memory
+const debounce = require('lodash.debounce');
+
+// One debounced function per note
+const saveNoteToDB = {};
+const notes = {};
 
 const setupSocket = (io) => {
-    io.on("connection", (socket) => {
-        console.log(`User connected: ${socket.id}`);
+  io.on("connection", (socket) => {
+    console.log(`🟢 User connected: ${socket.id}`);
 
-        // join a note room
-        socket.on("receive_note", (noteId) => {
-            console.log("Connected to server:", socket.id);
-            socket.join(noteId);
-            if(notes[noteId]) {
-                socket.emit("load_note", notes[noteId]); //send 
-            } else {
-                notes[noteId] = ""; //Initialize if not present
-            }
-        });
+    socket.on("receive_note", async (noteId) => {
+      socket.join(noteId);
 
-        // Listen for changes in the note
-        socket.on("update_note", ({ noteId, content }) => {
-            notes[noteId] = content;
-            socket.to(noteId).emit("receive_update", content)
-        });
+      if (!notes[noteId]) {
+        const note = await Note.findById(noteId);
+        notes[noteId] = note?.content || "";
+      }
 
-        socket.on("disconnect", () => {
-            console.log("User disconnected");
-        })
-    })
-}
+      socket.emit("load_note", notes[noteId]);
+    });
 
-module.exports = setupSocket
+    socket.on("update_note", ({ noteId, content }) => {
+      notes[noteId] = content;
+      socket.to(noteId).emit("receive_update", content);
+
+      if (!saveNoteToDB[noteId]) {
+        saveNoteToDB[noteId] = debounce(async (content) => {
+          await Note.findByIdAndUpdate(noteId, { content });
+          console.log(`💾 Saved note ${noteId} to DB`);
+        }, 1000); // Save 1 second after user stops typing
+      }
+
+      saveNoteToDB[noteId](content);
+    });
+
+    socket.on("disconnect", () => {
+      console.log(`🔴 User disconnected: ${socket.id}`);
+    });
+  });
+};
+
+module.exports = setupSocket;
